@@ -272,7 +272,24 @@ class MessagesLog(commands.Cog):
                     for a in message.attachments
                 ),
             )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
+        if message.author.avatar is None:
+            thing = message.author.default_avatar
+        else:
+            if discord.__version__[0] == "2":
+                thing = str(message.author.display_avatar.replace(size=2048, static_format="webp"))
+                if message.author.display_avatar.is_animated() is False:
+                    thing += "&quality=lossless"
+            else:
+                thing = str(message.author.avatar_url) + "&quality=lossless"
+                if message.author.is_avatar_animated():
+                    thing = message.author.avatar_url_as(format="gif", size=2048)
+                if self.bot.user.guild:
+                    req = await self.bot.http.request(discord.http.Route("GET", "/guilds/{gid}/members/{uid}", gid=self.bot.user.guild.id, uid=message.author.id))
+                    thing_av = req["avatar"]
+                    if thing_av:
+                        maid_url = f"https://cdn.discordapp.com/guilds/{self.bot.user.guild.id}/users/{message.author.id}/avatars/{thing_av}"
+                        thing = maid_url + ".gif?size=2048" if requests.get(maid_url).headers['content-type'] == "image/gif" else maid_url + ".webp?size=2048&quality=lossless"
+        embed.set_author(name=message.author, icon_url=thing)
         embed.set_footer(text=_("ID: {} • Sent at").format(message.id))
         embed.add_field(name=_("Channel"), value=message.channel.mention)
         try:
@@ -426,7 +443,24 @@ class MessagesLog(commands.Cog):
                     for a in before.attachments
                 ),
             )
-        embed.set_author(name=before.author, icon_url=before.author.avatar_url)
+        if before.author.avatar is None:
+            thing = before.author.default_avatar
+        else:
+            if discord.__version__[0] == "2":
+                thing = str(before.author.display_avatar.replace(size=2048, static_format="webp"))
+                if before.author.display_avatar.is_animated() is False:
+                    thing += "&quality=lossless"
+            else:
+                thing = str(before.author.avatar_url) + "&quality=lossless"
+                if before.author.is_avatar_animated():
+                    thing = before.author.avatar_url_as(format="gif", size=2048)
+                if self.bot.user.guild:
+                    req = await self.bot.http.request(discord.http.Route("GET", "/guilds/{gid}/members/{uid}", gid=self.bot.user.guild.id, uid=before.author.id))
+                    thing_av = req["avatar"]
+                    if thing_av:
+                        maid_url = f"https://cdn.discordapp.com/guilds/{self.bot.user.guild.id}/users/{before.author.id}/avatars/{thing_av}"
+                        thing = maid_url + ".gif?size=2048" if requests.get(maid_url).headers['content-type'] == "image/gif" else maid_url + ".webp?size=2048&quality=lossless"
+        embed.set_author(name=before.author, icon_url=thing)
         embed.set_footer(text=_("ID: {} • Sent at").format(before.id))
         try:
             await logchannel.send(embed=embed)
